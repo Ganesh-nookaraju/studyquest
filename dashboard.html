@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - StudyQuest</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/dashboard.css?v=3">
+</head>
+<body>
+
+  <!-- Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo" id="header-logo-link">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>StudyQuest</span>
+      </a>
+      
+      <button class="hamburger" aria-label="Toggle Navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Courses</a>
+        <a href="categories.html">Categories</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="about.html">About Us</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Welcome Dashboard Hero Banner -->
+    <section class="dashboard-hero">
+      <div class="dashboard-container">
+        <div class="dashboard-header animate-fade">
+          <div class="user-welcome-container">
+            <button id="edit-profile-btn" class="profile-avatar-wrapper" title="Edit Profile Details" style="background: none; border: none; padding: 0; outline: none; font: inherit; color: inherit; display: flex; align-items: center; justify-content: center;">
+              <div class="profile-avatar-glow"></div>
+              <div class="profile-avatar-inner">
+                <span id="user-avatar-initial">C</span>
+                <div class="profile-avatar-overlay">
+                  <i class="fas fa-camera"></i>
+                  <span>EDIT</span>
+                </div>
+              </div>
+              <div class="status-indicator active"></div>
+              <span class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Edit Profile</span>
+            </button>
+            <div class="user-welcome">
+              <h2 class="user-greeting">Welcome Back, <span id="welcome-username">Coder</span>!</h2>
+              <p class="user-subtext">
+                Ready to level up your development capabilities today? Pick a course below.
+                <a href="#" id="edit-profile-link" class="edit-link-text" style="color: var(--primary); margin-left: 8px; font-weight: 600; text-decoration: underline; font-size: 0.9rem;"><i class="fas fa-edit"></i> Edit Profile</a>
+              </p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button id="reset-progress-btn" class="btn btn-danger" style="background-color: #e76f51; color: var(--white); box-shadow: 0 4px 12px rgba(231, 111, 81, 0.25); border: none;">
+              <i class="fas fa-undo-alt"></i> Reset Progress
+            </button>
+          </div>
+        </div>
+
+        <!-- Student stats widgets -->
+        <div class="stats-grid animate-fade" style="animation-delay: 0.1s;">
+          <!-- XP -->
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-star"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-xp-val">0</span>
+              <span class="stat-label">Total XP Earned</span>
+            </div>
+          </div>
+
+          <!-- Taken -->
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-taken-val">0</span>
+              <span class="stat-label">Quizzes Attempted</span>
+            </div>
+          </div>
+
+          <!-- Passed -->
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-passed-val">0</span>
+              <span class="stat-label">Quizzes Passed</span>
+            </div>
+          </div>
+
+          <!-- Completion Rate -->
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+            <div class="stat-info" style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span class="stat-value" id="stat-completion-val">0%</span>
+                <span class="stat-label">Progress</span>
+              </div>
+              <div class="progress-bar-wrapper" style="margin-top: 6px; height: 6px;">
+                <div class="progress-bar-fill" id="stat-completion-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Courses List Grid -->
+    <section class="dashboard-container" style="margin-top: 0;">
+      <div class="progression-guide-card animate-fade">
+        <div class="guide-text">
+          <h4>Progression System Guide</h4>
+          <p>Complete quizzes with a passing grade (60% or higher, 3/5 correct answers) to record high scores, gain experience points, and unlock subsequent difficulty levels.</p>
+        </div>
+        <div class="guide-steps">
+          <div class="guide-step easy"><i class="fas fa-play"></i> Easy</div>
+          <div class="guide-step-arrow"><i class="fas fa-arrow-right"></i></div>
+          <div class="guide-step medium"><i class="fas fa-lock"></i> Medium</div>
+          <div class="guide-step-arrow"><i class="fas fa-arrow-right"></i></div>
+          <div class="guide-step hard"><i class="fas fa-lock"></i> Hard</div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h3>Core Programming Tracks</h3>
+      </div>
+
+      <div id="dashboard-courses-grid" class="courses-grid">
+        <!-- Dynmically loaded by js/dashboard.js -->
+        <div class="empty-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading course modules...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <svg viewBox="0 0 24 24" width="32" height="32">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>StudyQuest</span>
+        </a>
+        <p>An interactive learning and quiz platform that helps users improve programming skills through structured practice and friendly competition.</p>
+      </div>
+
+      <div class="footer-links-group">
+        <h4>Quick Links</h4>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="dashboard.html">Courses</a>
+          <a href="categories.html">Categories</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="about.html">About Us</a>
+        </div>
+      </div>
+
+      <div class="footer-contact">
+        <h4>Contact Us</h4>
+        <div class="contact-info">
+          <span><i class="fas fa-envelope"></i> contact@studyquest.edu</span>
+          <span><i class="fas fa-map-marker-alt"></i> Rajahmundry, Andhra Pradesh, India</span>
+        </div>
+        <div class="social-icons">
+          <a href="#" aria-label="StudyQuest Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="StudyQuest GitHub"><i class="fab fa-github"></i></a>
+          <a href="#" aria-label="StudyQuest LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 StudyQuest, Rajahmundry, India. All rights reserved.</p>
+      <p>Designed for Excellence.</p>
+    </div>
+  </footer>
+
+  <!-- Edit Profile Modal Overlay -->
+  <div id="profile-modal" class="modal">
+    <div class="modal-content animate-fade">
+      <div class="modal-header">
+        <h3>Edit Profile & Activity</h3>
+        <span class="close-modal" id="close-profile-modal">&times;</span>
+      </div>
+      <form id="edit-profile-form" class="modal-form-grid" novalidate>
+        <div class="form-group form-group-full">
+          <label for="edit-username">Username</label>
+          <div class="form-control-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" id="edit-username" class="form-control" placeholder="Enter username" required>
+            <div class="error-message">Username must be at least 3 characters.</div>
+          </div>
+        </div>
+
+        <div class="form-group-section-title">
+          <i class="fas fa-chart-line"></i> Activity & Statistics
+        </div>
+
+        <div class="form-group">
+          <label for="edit-xp">Experience Points (XP)</label>
+          <div class="form-control-wrapper">
+            <i class="fas fa-star"></i>
+            <input type="number" id="edit-xp" class="form-control" placeholder="Enter XP" min="0" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-quizzes-taken">Quizzes Attempted</label>
+          <div class="form-control-wrapper">
+            <i class="fas fa-tasks"></i>
+            <input type="number" id="edit-quizzes-taken" class="form-control" placeholder="Quizzes Attempted" min="0" required>
+          </div>
+        </div>
+
+        <div class="form-group form-group-full">
+          <label for="edit-quizzes-passed">Quizzes Passed</label>
+          <div class="form-control-wrapper">
+            <i class="fas fa-check-double"></i>
+            <input type="number" id="edit-quizzes-passed" class="form-control" placeholder="Quizzes Passed" min="0" required>
+          </div>
+        </div>
+
+        <button type="submit" class="modal-submit-btn">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

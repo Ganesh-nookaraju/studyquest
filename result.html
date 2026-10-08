@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Results - StudyQuest</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/quiz.css?v=3">
+</head>
+<body>
+
+  <!-- Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo" id="header-logo-link">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>StudyQuest</span>
+      </a>
+      
+      <button class="hamburger" aria-label="Toggle Navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Courses</a>
+        <a href="categories.html">Categories</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="about.html">About Us</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main style="padding: 20px 0;">
+    <div class="results-card animate-fade">
+      <div class="result-badge-section">
+        <!-- Circle graph dynamically styled -->
+        <div class="result-circle-graph" id="result-circle-graph">
+          <span id="result-pct-text">0%</span>
+        </div>
+        
+        <h2 class="result-status-title" id="result-status-title">PASS</h2>
+        <p class="result-congrats" id="result-congrats-text">
+          Congratulations! You did an excellent job.
+        </p>
+      </div>
+
+      <!-- Results stats summary -->
+      <div class="result-summary-grid">
+        <div class="summary-item">
+          <h5>Questions Passed</h5>
+          <span class="summary-value score" id="result-score-val">0 / 5</span>
+        </div>
+        <div class="summary-item">
+          <h5>Correct Answers</h5>
+          <span class="summary-value correct" id="result-correct-val">0</span>
+        </div>
+        <div class="summary-item">
+          <h5>Wrong Answers</h5>
+          <span class="summary-value incorrect" id="result-incorrect-val">0</span>
+        </div>
+      </div>
+
+      <!-- Quick Navigation -->
+      <div class="result-actions">
+        <button id="btn-retry-quiz" class="btn btn-secondary">
+          <i class="fas fa-redo"></i> Retry Attempt
+        </button>
+        <a href="dashboard.html" class="btn btn-primary">
+          <i class="fas fa-th-large"></i> Go to Dashboard
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <svg viewBox="0 0 24 24" width="32" height="32">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>StudyQuest</span>
+        </a>
+        <p>An interactive learning and quiz platform that helps users improve programming skills through structured practice and friendly competition.</p>
+      </div>
+
+      <div class="footer-links-group">
+        <h4>Quick Links</h4>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="dashboard.html">Courses</a>
+          <a href="categories.html">Categories</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="about.html">About Us</a>
+        </div>
+      </div>
+
+      <div class="footer-contact">
+        <h4>Contact Us</h4>
+        <div class="contact-info">
+          <span><i class="fas fa-envelope"></i> contact@studyquest.edu</span>
+          <span><i class="fas fa-map-marker-alt"></i> Rajahmundry, Andhra Pradesh, India</span>
+        </div>
+        <div class="social-icons">
+          <a href="#" aria-label="StudyQuest Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="StudyQuest GitHub"><i class="fab fa-github"></i></a>
+          <a href="#" aria-label="StudyQuest LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 StudyQuest, Rajahmundry, India. All rights reserved.</p>
+      <p>Designed for Excellence.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const resultData = JSON.parse(sessionStorage.getItem('studyquest_last_result'));
+
+      if (!resultData) {
+        showToast('No quiz result found', 'error');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        return;
+      }
+
+      const circleGraph = document.getElementById('result-circle-graph');
+      const pctText = document.getElementById('result-pct-text');
+      const statusTitle = document.getElementById('result-status-title');
+      const congratsText = document.getElementById('result-congrats-text');
+      const scoreVal = document.getElementById('result-score-val');
+      const correctVal = document.getElementById('result-correct-val');
+      const incorrectVal = document.getElementById('result-incorrect-val');
+      const retryBtn = document.getElementById('btn-retry-quiz');
+
+      // Populate basic statistics
+      pctText.textContent = `${resultData.percent}%`;
+      scoreVal.textContent = `${resultData.score} / 5`;
+      correctVal.textContent = resultData.correct;
+      incorrectVal.textContent = resultData.wrong;
+
+      // Handle graphic rendering
+      circleGraph.style.setProperty('--pct-val', `${resultData.percent}%`);
+
+      // Modify pass vs fail classes
+      if (resultData.passed) {
+        statusTitle.textContent = 'QUEST PASSED';
+        statusTitle.className = 'result-status-title pass';
+        congratsText.textContent = `Excellent job! You scored ${resultData.percent}% and successfully passed this quiz module. The next level has been unlocked on your dashboard.`;
+        circleGraph.style.background = `radial-gradient(var(--card-bg) 55%, transparent 56%), conic-gradient(var(--primary) ${resultData.percent}%, var(--border-color) 0)`;
+      } else {
+        statusTitle.textContent = 'QUEST FAILED';
+        statusTitle.className = 'result-status-title fail';
+        congratsText.textContent = `Oops! You scored ${resultData.percent}%. You need at least 60% (3 / 5 correct answers) to pass and unlock the next difficulty tier. Practice makes perfect—try again!`;
+        circleGraph.style.background = `radial-gradient(var(--card-bg) 55%, transparent 56%), conic-gradient(#e76f51 ${resultData.percent}%, var(--border-color) 0)`;
+      }
+
+      // Hook retry logic
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          window.location.href = `quiz.html?subject=${resultData.subject}&difficulty=${resultData.difficulty}`;
+        });
+      }
+    });
+  </script>
+</body>
+</html>
