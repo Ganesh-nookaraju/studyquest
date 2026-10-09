@@ -9,15 +9,59 @@ let difficulty = '';
 let isMainCourse = true;
 let isFallbackMode = false;
 
+// Course key normalization alias mapping
+const subjectAliasMap = {
+  js: 'javascript',
+  'javascript': 'javascript',
+  py: 'python',
+  python: 'python',
+  css: 'css',
+  html: 'html',
+  c: 'c',
+  cpp: 'cpp',
+  'c++': 'cpp',
+  java: 'java',
+  sql: 'sql',
+  dbms: 'dbms',
+  json: 'json',
+  react: 'reactjs',
+  reactjs: 'reactjs',
+  'react.js': 'reactjs',
+  ds: 'datastructures',
+  dsa: 'datastructures',
+  datastructures: 'datastructures',
+  algo: 'algorithms',
+  algorithms: 'algorithms'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   
-  // Read subject/course parameter flexibly to handle any URL parameter naming
-  subject = urlParams.get('subject') || urlParams.get('course') || urlParams.get('category') || urlParams.get('id') || urlParams.get('topic') || 'html';
-  difficulty = urlParams.get('difficulty') || urlParams.get('level') || urlParams.get('diff') || 'easy';
+  // Extract course parameter across all possible parameter names (case-insensitive)
+  let rawSubject = null;
+  for (const [paramKey, paramValue] of urlParams.entries()) {
+    const k = paramKey.toLowerCase().trim();
+    if (['subject', 'course', 'category', 'topic', 'id'].includes(k)) {
+      rawSubject = paramValue;
+      break;
+    }
+  }
 
-  subject = subject.toLowerCase().trim();
-  difficulty = difficulty.toLowerCase().trim();
+  let rawDiff = null;
+  for (const [paramKey, paramValue] of urlParams.entries()) {
+    const k = paramKey.toLowerCase().trim();
+    if (['difficulty', 'level', 'diff'].includes(k)) {
+      rawDiff = paramValue;
+      break;
+    }
+  }
+
+  rawSubject = (rawSubject || 'html').toLowerCase().trim();
+  rawDiff = (rawDiff || 'easy').toLowerCase().trim();
+
+  // Normalize subject via alias map
+  subject = subjectAliasMap[rawSubject] || rawSubject;
+  difficulty = ['easy', 'medium', 'hard'].includes(rawDiff) ? rawDiff : 'easy';
 
   isMainCourse = ['html', 'css', 'javascript', 'python'].includes(subject);
 
@@ -50,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initQuiz(data.questions, false);
       })
       .catch(err => {
-        console.warn('Backend load attempt failed, loading local questions:', err.message);
+        console.warn(`Backend API fetch for '${subject}' failed (${err.message}), attempting local questions fallback...`);
         loadFromJSONFallback(subject, difficulty);
       });
   } else {
@@ -68,9 +112,12 @@ function loadFromJSONFallback(subj, diff) {
       return res.json();
     })
     .then(jsonData => {
-      const subjData = jsonData[subj];
-      if (subjData && subjData[diff]) {
-        const rawQuestions = subjData[diff];
+      const targetSubj = subj.toLowerCase().trim();
+      const targetDiff = diff.toLowerCase().trim();
+
+      const subjData = jsonData[targetSubj];
+      if (subjData && subjData[targetDiff] && subjData[targetDiff].length > 0) {
+        const rawQuestions = subjData[targetDiff];
         const formattedQuestions = rawQuestions.map(q => ({
           _id: q.id || `q_${Math.random()}`,
           question: q.question,
@@ -78,20 +125,19 @@ function loadFromJSONFallback(subj, diff) {
           correctAnswer: q.answer !== undefined ? q.answer : 0
         }));
         initQuiz(formattedQuestions, true);
+      } else if (subjData && (subjData.easy || subjData.medium || subjData.hard)) {
+        // Fallback to available difficulty level of the SAME requested course
+        const availableList = subjData.easy || subjData.medium || subjData.hard;
+        const formattedQuestions = availableList.map(q => ({
+          _id: q.id || `q_${Math.random()}`,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.answer !== undefined ? q.answer : 0
+        }));
+        initQuiz(formattedQuestions, true);
       } else {
-        // Ultimate fallback: try html easy if subject not found in JSON
-        const defaultList = (jsonData.html && jsonData.html.easy) ? jsonData.html.easy : [];
-        if (defaultList.length > 0) {
-          const formattedQuestions = defaultList.map(q => ({
-            _id: q.id || `q_${Math.random()}`,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.answer !== undefined ? q.answer : 0
-          }));
-          initQuiz(formattedQuestions, true);
-        } else {
-          showToast('No question data available', 'error');
-        }
+        showToast(`No question bank found for course: ${subj.toUpperCase()}`, 'error');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
       }
     })
     .catch(err => {
@@ -110,7 +156,7 @@ function initQuiz(questionsList, fallback = false) {
     return;
   }
 
-  // Choose 5 questions
+  // Choose 5 questions belonging to selected course
   const selectedQuestions = questionsList.slice(0, 5);
 
   // Randomize options for each question while tracking original indices
