@@ -19,11 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  isMainCourse = ['html', 'css', 'javascript', 'python'].includes(subject);
+  isMainCourse = ['html', 'css', 'javascript', 'python'].includes(subject.toLowerCase().trim());
 
-  // Retrieve auth token
+  // Retrieve auth token and check authentication state
   const currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
-  const token = currentUser ? currentUser.token : null;
+  if (!currentUser || !currentUser.token) {
+    showToast('Please log in to access this quiz', 'error');
+    setTimeout(() => {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent('quiz.html' + window.location.search);
+    }, 1200);
+    return;
+  }
+
+  const token = currentUser.token;
 
   // Load questions from Backend API
   fetch(`http://localhost:5000/api/quiz/${subject.toLowerCase().trim()}?difficulty=${difficulty.toLowerCase().trim()}`, {
@@ -34,7 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
     .then(response => {
-      if (!response.ok) throw new Error('Failed to load questions from backend');
+      if (response.status === 401) {
+        throw new Error('Your session has expired. Please log in again.');
+      }
+      if (!response.ok) throw new Error('Failed to load questions from backend server.');
       return response.json();
     })
     .then(data => {
@@ -45,8 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => {
       console.error(error);
-      showToast('Error loading quiz questions from server. Please log in first.', 'error');
-      setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+      showToast(error.message || 'Error loading quiz questions. Please check server connection.', 'error');
+      if (error.message.includes('expired') || error.message.includes('log in')) {
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+      }
     });
 });
 
