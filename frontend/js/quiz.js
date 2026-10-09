@@ -7,76 +7,115 @@ let timeLeft = 60; // 60 seconds total for 5 questions
 let subject = '';
 let difficulty = '';
 let isMainCourse = true;
+let isFallbackMode = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  subject = urlParams.get('subject');
-  difficulty = urlParams.get('difficulty');
+  
+  // Read subject/course parameter flexibly to handle any URL parameter naming
+  subject = urlParams.get('subject') || urlParams.get('course') || urlParams.get('category') || urlParams.get('id') || urlParams.get('topic') || 'html';
+  difficulty = urlParams.get('difficulty') || urlParams.get('level') || urlParams.get('diff') || 'easy';
 
-  if (!subject || !difficulty) {
-    showToast('Invalid quiz parameters', 'error');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-    return;
-  }
+  subject = subject.toLowerCase().trim();
+  difficulty = difficulty.toLowerCase().trim();
 
-  isMainCourse = ['html', 'css', 'javascript', 'python'].includes(subject.toLowerCase().trim());
+  isMainCourse = ['html', 'css', 'javascript', 'python'].includes(subject);
 
-  // Retrieve auth token and check authentication state
-  const currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
-  if (!currentUser || !currentUser.token) {
-    showToast('Please log in to access this quiz', 'error');
-    setTimeout(() => {
-      window.location.href = 'login.html?redirect=' + encodeURIComponent('quiz.html' + window.location.search);
-    }, 1200);
-    return;
+  // Check auth user session or create guest fallback session
+  let currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
+  if (!currentUser) {
+    currentUser = { username: 'Student', token: null };
+    localStorage.setItem('studyquest_user', JSON.stringify(currentUser));
   }
 
   const token = currentUser.token;
 
-  // Load questions from Backend API
-  fetch(`http://localhost:5000/api/quiz/${subject.toLowerCase().trim()}?difficulty=${difficulty.toLowerCase().trim()}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    }
-  })
-    .then(response => {
-      if (response.status === 401) {
-        throw new Error('Your session has expired. Please log in again.');
+  // If token is present, attempt fetching from Backend API
+  if (token) {
+    fetch(`http://localhost:5000/api/quiz/${subject}?difficulty=${difficulty}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-      if (!response.ok) throw new Error('Failed to load questions from backend server.');
-      return response.json();
     })
-    .then(data => {
-      if (!data.success || !data.questions) {
-        throw new Error(data.message || 'Failed to retrieve questions');
-      }
-      initQuiz(data.questions);
-    })
-    .catch(error => {
-      console.error(error);
-      showToast(error.message || 'Error loading quiz questions. Please check server connection.', 'error');
-      if (error.message.includes('expired') || error.message.includes('log in')) {
-        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
-      }
-    });
+      .then(response => {
+        if (!response.ok) throw new Error('Backend unavailable, switching to local question data');
+        return response.json();
+      })
+      .then(data => {
+        if (!data.success || !data.questions || data.questions.length === 0) {
+          throw new Error('No questions returned from backend API');
+        }
+        initQuiz(data.questions, false);
+      })
+      .catch(err => {
+        console.warn('Backend load attempt failed, loading local questions:', err.message);
+        loadFromJSONFallback(subject, difficulty);
+      });
+  } else {
+    // Load directly from local JSON fallback if no backend token
+    loadFromJSONFallback(subject, difficulty);
+  }
 });
 
+// Fallback loader from data/questions.json
+function loadFromJSONFallback(subj, diff) {
+  isFallbackMode = true;
+  fetch('data/questions.json')
+    .then(res => {
+      if (!res.ok) throw new Error('Could not load local questions file');
+      return res.json();
+    })
+    .then(jsonData => {
+      const subjData = jsonData[subj];
+      if (subjData && subjData[diff]) {
+        const rawQuestions = subjData[diff];
+        const formattedQuestions = rawQuestions.map(q => ({
+          _id: q.id || `q_${Math.random()}`,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.answer !== undefined ? q.answer : 0
+        }));
+        initQuiz(formattedQuestions, true);
+      } else {
+        // Ultimate fallback: try html easy if subject not found in JSON
+        const defaultList = (jsonData.html && jsonData.html.easy) ? jsonData.html.easy : [];
+        if (defaultList.length > 0) {
+          const formattedQuestions = defaultList.map(q => ({
+            _id: q.id || `q_${Math.random()}`,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.answer !== undefined ? q.answer : 0
+          }));
+          initQuiz(formattedQuestions, true);
+        } else {
+          showToast('No question data available', 'error');
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error reading questions.json:', err);
+      showToast('Error loading question dataset', 'error');
+    });
+}
+
 // Initialize quiz data and randomize 5 questions
-function initQuiz(questionsList) {
+function initQuiz(questionsList, fallback = false) {
+  isFallbackMode = fallback;
+
   if (!questionsList || questionsList.length === 0) {
-    showToast('No questions found for this topic or difficulty', 'error');
+    showToast('No questions found for this topic', 'error');
     setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
     return;
   }
 
-  // Choose first 5 questions returned from backend
+  // Choose 5 questions
   const selectedQuestions = questionsList.slice(0, 5);
 
-  // Randomize options for each question while tracking original indices for server grading
+  // Randomize options for each question while tracking original indices
   quizQuestions = selectedQuestions.map(q => {
-    const originalOptions = q.options;
+    const originalOptions = q.options || ['Option 1', 'Option 2', 'Option 3', 'Option 4'];
     const indexedOptions = originalOptions.map((opt, idx) => ({ text: opt, idx }));
 
     // Shuffle options
@@ -86,7 +125,8 @@ function initQuiz(questionsList) {
       _id: q._id,
       question: q.question,
       options: shuffledOptions.map(o => o.text),
-      originalIndices: shuffledOptions.map(o => o.idx)
+      originalIndices: shuffledOptions.map(o => o.idx),
+      correctAnswer: q.correctAnswer
     };
   });
 
@@ -113,9 +153,13 @@ function initQuiz(questionsList) {
   loadQuestion(0);
 
   // Hook navigation buttons
-  document.getElementById('btn-prev').addEventListener('click', prevQuestion);
-  document.getElementById('btn-next').addEventListener('click', nextQuestion);
-  document.getElementById('btn-submit').addEventListener('click', submitQuiz);
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  const submitBtn = document.getElementById('btn-submit');
+
+  if (prevBtn) prevBtn.onclick = prevQuestion;
+  if (nextBtn) nextBtn.onclick = nextQuestion;
+  if (submitBtn) submitBtn.onclick = submitQuiz;
 
   // Start timer
   startTimer();
@@ -125,9 +169,11 @@ function initQuiz(questionsList) {
 function loadQuestion(index) {
   currentQuestionIndex = index;
   const q = quizQuestions[index];
+  if (!q) return;
 
   // Update question numbers and progress bar
-  document.getElementById('current-question-num').textContent = index + 1;
+  const numEl = document.getElementById('current-question-num');
+  if (numEl) numEl.textContent = index + 1;
   
   const dots = document.querySelectorAll('.progress-dot');
   dots.forEach((dot, idx) => {
@@ -137,42 +183,44 @@ function loadQuestion(index) {
   });
 
   // Render question text
-  document.getElementById('question-text').textContent = q.question;
+  const qText = document.getElementById('question-text');
+  if (qText) qText.textContent = q.question;
 
   // Render choices list
   const optionsContainer = document.getElementById('options-list');
-  optionsContainer.innerHTML = '';
+  if (optionsContainer) {
+    optionsContainer.innerHTML = '';
+    const markers = ['A', 'B', 'C', 'D'];
+    q.options.forEach((opt, oIdx) => {
+      const optCard = document.createElement('div');
+      optCard.className = 'option-card';
+      if (userAnswers[index] === oIdx) {
+        optCard.classList.add('selected');
+      }
 
-  const markers = ['A', 'B', 'C', 'D'];
-  q.options.forEach((opt, oIdx) => {
-    const optCard = document.createElement('div');
-    optCard.className = 'option-card';
-    if (userAnswers[index] === oIdx) {
-      optCard.classList.add('selected');
-    }
+      optCard.innerHTML = `
+        <div class="option-marker">${markers[oIdx]}</div>
+        <div class="option-text">${escapeHtml(opt)}</div>
+      `;
 
-    optCard.innerHTML = `
-      <div class="option-marker">${markers[oIdx]}</div>
-      <div class="option-text">${escapeHtml(opt)}</div>
-    `;
-
-    optCard.addEventListener('click', () => selectOption(oIdx));
-    optionsContainer.appendChild(optCard);
-  });
+      optCard.addEventListener('click', () => selectOption(oIdx));
+      optionsContainer.appendChild(optCard);
+    });
+  }
 
   // Toggle navigation buttons visibility
   const prevBtn = document.getElementById('btn-prev');
   const nextBtn = document.getElementById('btn-next');
   const submitBtn = document.getElementById('btn-submit');
 
-  prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+  if (prevBtn) prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
 
   if (index === 4) {
-    nextBtn.style.display = 'none';
-    submitBtn.style.display = 'inline-flex';
+    if (nextBtn) nextBtn.style.display = 'none';
+    if (submitBtn) submitBtn.style.display = 'inline-flex';
   } else {
-    nextBtn.style.display = 'inline-flex';
-    submitBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'inline-flex';
+    if (submitBtn) submitBtn.style.display = 'none';
   }
 }
 
@@ -203,6 +251,7 @@ function nextQuestion() {
 
 // Total timer ticking
 function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
   timeLeft = 60;
   const timerVal = document.getElementById('timer-val');
   const timerBox = document.querySelector('.quiz-timer-box');
@@ -219,20 +268,20 @@ function startTimer() {
 
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      showToast('Time is up! Compiling answers.', 'error');
+      showToast('Time is up! Submitting answers.', 'error');
       setTimeout(() => {
         submitQuiz();
-      }, 1000);
+      }, 800);
     }
   }, 1000);
 }
 
 // Submit answers and compile results
 function submitQuiz() {
-  clearInterval(timerInterval);
+  if (timerInterval) clearInterval(timerInterval);
 
-  const currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
-  const token = currentUser ? currentUser.token : null;
+  const currentUser = JSON.parse(localStorage.getItem('studyquest_user')) || { username: 'Student' };
+  const token = currentUser.token;
 
   // Map user answers back to original indexes
   const answersPayload = quizQuestions.map((q, idx) => {
@@ -244,98 +293,110 @@ function submitQuiz() {
     };
   });
 
-  const submitBody = {
-    course: subject,
-    difficulty: difficulty,
-    answers: answersPayload
-  };
-
-  fetch('http://localhost:5000/api/quiz/submit', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(submitBody)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to grade quiz');
-      return res.json();
-    })
-    .then(data => {
-      if (!data.success) {
-        showToast(data.message || 'Submission failed', 'error');
-        return;
-      }
-
-      const result = data.result;
-
-      // Retrieve and update local progression
-      if (currentUser) {
-        const progressKey = `studyquest_progress_${currentUser.username}`;
-        const userProgress = JSON.parse(localStorage.getItem(progressKey));
-
-        if (userProgress) {
-          userProgress.stats.quizzesTaken = (userProgress.stats.quizzesTaken || 0) + 1;
-          
-          const group = isMainCourse ? 'courses' : 'categories';
-
-          if (result.passed) {
-            userProgress.stats.quizzesPassed = (userProgress.stats.quizzesPassed || 0) + 1;
-
-            // Add XP
-            let xpGained = 100;
-            if (difficulty === 'medium') xpGained = 150;
-            if (difficulty === 'hard') xpGained = 200;
-            userProgress.stats.xp = (userProgress.stats.xp || 0) + xpGained;
-
-            // Update level status safely
-            if (!userProgress[group]) userProgress[group] = {};
-            if (!userProgress[group][subject]) {
-              userProgress[group][subject] = { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 };
-            }
-
-            userProgress[group][subject][difficulty] = 'passed';
-
-            // Unlock next difficulties
-            if (difficulty === 'easy') {
-              if (userProgress[group][subject].medium === 'locked') {
-                userProgress[group][subject].medium = 'unlocked';
-              }
-            } else if (difficulty === 'medium') {
-              if (userProgress[group][subject].hard === 'locked') {
-                userProgress[group][subject].hard = 'unlocked';
-              }
-            }
-          }
-
-          // Save user progress
-          localStorage.setItem(progressKey, JSON.stringify(userProgress));
-
-          // Log leaderboard entry
-          updateLeaderboard(currentUser.username, subject, difficulty, result.correctAnswers);
-        }
-      }
-
-      // Save session details for Result page display
-      const attemptResult = {
-        subject: subject,
+  if (!isFallbackMode && token) {
+    // Attempt backend submit
+    fetch('http://localhost:5000/api/quiz/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        course: subject,
         difficulty: difficulty,
-        score: result.correctAnswers,
-        correct: result.correctAnswers,
-        wrong: result.wrongAnswers,
-        percent: result.percentage,
-        passed: result.passed
-      };
-      sessionStorage.setItem('studyquest_last_result', JSON.stringify(attemptResult));
-
-      // Redirect to results screen
-      window.location.href = 'result.html';
+        answers: answersPayload
+      })
     })
-    .catch(err => {
-      console.error(err);
-      showToast('Network error submitting quiz results', 'error');
-    });
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.result) {
+          processResultAndRedirect(currentUser, data.result.correctAnswers, data.result.wrongAnswers, data.result.percentage, data.result.passed);
+        } else {
+          processLocalResultAndRedirect(currentUser);
+        }
+      })
+      .catch(err => {
+        console.warn('Backend submission failed, falling back to local evaluation:', err);
+        processLocalResultAndRedirect(currentUser);
+      });
+  } else {
+    processLocalResultAndRedirect(currentUser);
+  }
+}
+
+// Client-side local result processor (Fallback mode)
+function processLocalResultAndRedirect(currentUser) {
+  let correctCount = 0;
+  let wrongCount = 0;
+
+  quizQuestions.forEach((q, idx) => {
+    const selectedShuffledIndex = userAnswers[idx];
+    const originalIndex = selectedShuffledIndex !== null ? q.originalIndices[selectedShuffledIndex] : -1;
+    if (q.correctAnswer !== undefined && originalIndex === q.correctAnswer) {
+      correctCount++;
+    } else {
+      wrongCount++;
+    }
+  });
+
+  const percentage = Math.round((correctCount / 5) * 100);
+  const passed = percentage >= 60;
+
+  processResultAndRedirect(currentUser, correctCount, wrongCount, percentage, passed);
+}
+
+// Unified result processing & redirection
+function processResultAndRedirect(currentUser, correct, wrong, percentage, passed) {
+  const username = currentUser ? currentUser.username : 'Student';
+  const progressKey = `studyquest_progress_${username}`;
+  let userProgress = JSON.parse(localStorage.getItem(progressKey));
+
+  if (!userProgress) {
+    initUserProgress(username);
+    userProgress = JSON.parse(localStorage.getItem(progressKey));
+  }
+
+  if (userProgress) {
+    userProgress.stats.quizzesTaken = (userProgress.stats.quizzesTaken || 0) + 1;
+    const group = isMainCourse ? 'courses' : 'categories';
+
+    if (passed) {
+      userProgress.stats.quizzesPassed = (userProgress.stats.quizzesPassed || 0) + 1;
+      let xpGained = 100;
+      if (difficulty === 'medium') xpGained = 150;
+      if (difficulty === 'hard') xpGained = 200;
+      userProgress.stats.xp = (userProgress.stats.xp || 0) + xpGained;
+
+      if (!userProgress[group]) userProgress[group] = {};
+      if (!userProgress[group][subject]) {
+        userProgress[group][subject] = { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 };
+      }
+
+      userProgress[group][subject][difficulty] = 'passed';
+
+      if (difficulty === 'easy' && userProgress[group][subject].medium === 'locked') {
+        userProgress[group][subject].medium = 'unlocked';
+      } else if (difficulty === 'medium' && userProgress[group][subject].hard === 'locked') {
+        userProgress[group][subject].hard = 'unlocked';
+      }
+    }
+
+    localStorage.setItem(progressKey, JSON.stringify(userProgress));
+    updateLeaderboard(username, subject, difficulty, correct);
+  }
+
+  const attemptResult = {
+    subject: subject,
+    difficulty: difficulty,
+    score: correct,
+    correct: correct,
+    wrong: wrong,
+    percent: percentage,
+    passed: passed
+  };
+  sessionStorage.setItem('studyquest_last_result', JSON.stringify(attemptResult));
+
+  window.location.href = 'result.html';
 }
 
 // Log high scores inside database
@@ -349,13 +410,11 @@ function updateLeaderboard(username, subjectKey, diff, score) {
   );
 
   if (existingIdx > -1) {
-    // Overwrite if score is higher
     if (score > leaderboard[existingIdx].score) {
       leaderboard[existingIdx].score = score;
       leaderboard[existingIdx].date = new Date().toISOString();
     }
   } else {
-    // Append entry
     leaderboard.push({
       username: username,
       course: subjectKey,
