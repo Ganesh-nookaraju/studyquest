@@ -56,7 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  rawSubject = (rawSubject || 'html').toLowerCase().trim();
+  // Fallback to sessionStorage if not present in URL
+  if (!rawSubject) {
+    rawSubject = sessionStorage.getItem('studyquest_selected_subject');
+  }
+
+  if (!rawDiff) {
+    rawDiff = sessionStorage.getItem('studyquest_selected_difficulty');
+  }
+
+  if (!rawSubject) {
+    showToast('No course selected. Please select a course from the Dashboard.', 'error');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+    return;
+  }
+
+  rawSubject = rawSubject.toLowerCase().trim();
   rawDiff = (rawDiff || 'easy').toLowerCase().trim();
 
   // Normalize subject via alias map

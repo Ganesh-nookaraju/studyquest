@@ -168,14 +168,10 @@ function renderLevelButton(subject, level, status) {
   let icon = 'fa-lock';
   let onclick = 'return false;';
 
-  if (status === 'passed') {
-    btnClass = 'passed';
-    icon = 'fa-check-circle';
-    onclick = `window.location.href='quiz.html?subject=${subject}&difficulty=${level}'`;
-  } else if (status === 'unlocked') {
-    btnClass = 'unlocked';
-    icon = 'fa-play';
-    onclick = `window.location.href='quiz.html?subject=${subject}&difficulty=${level}'`;
+  if (status === 'passed' || status === 'unlocked') {
+    btnClass = status;
+    icon = status === 'passed' ? 'fa-check-circle' : 'fa-play';
+    onclick = `selectAndLaunchQuiz('${subject}', '${level}', event)`;
   }
 
   return `
@@ -185,6 +181,14 @@ function renderLevelButton(subject, level, status) {
     </button>
   `;
 }
+
+// Global click handler to guarantee selected course & difficulty persist across page navigation
+window.selectAndLaunchQuiz = function(subject, level, event) {
+  if (event) event.preventDefault();
+  sessionStorage.setItem('studyquest_selected_subject', subject);
+  sessionStorage.setItem('studyquest_selected_difficulty', level);
+  window.location.href = `quiz.html?subject=${encodeURIComponent(subject)}&difficulty=${encodeURIComponent(level)}`;
+};
 
 // Initialize filters on the categories page
 function initCategoryFilter() {
