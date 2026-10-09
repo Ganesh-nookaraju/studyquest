@@ -1,20 +1,140 @@
 /* Forms (Login / Register) styling */
 .auth-wrapper {
+  position: relative;
   min-height: calc(100vh - var(--header-height) - 150px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 0;
+  padding: 60px 20px;
+  overflow: hidden;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 40px;
   box-shadow: var(--shadow-lg);
+  border-top: 5px solid #2E8B57;
+  position: relative;
+  z-index: 2;
+}
+
+/* Outer Floating Feature Badges in Background Margin Space */
+.auth-floating-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 12px 18px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  z-index: 1;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.auth-floating-badge:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: #2E8B57;
+  box-shadow: 0 14px 30px rgba(46, 139, 87, 0.15);
+}
+
+.auth-floating-badge.top-left {
+  top: 14%;
+  left: 6%;
+}
+
+.auth-floating-badge.bottom-left {
+  bottom: 16%;
+  left: 5%;
+}
+
+.auth-floating-badge.top-right {
+  top: 14%;
+  right: 6%;
+}
+
+.auth-floating-badge.bottom-right {
+  bottom: 16%;
+  right: 5%;
+}
+
+.auth-badge-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.auth-badge-icon.book {
+  background-color: rgba(42, 157, 143, 0.15);
+  color: #2A9D8F;
+}
+
+.auth-badge-icon.code {
+  background-color: rgba(46, 139, 87, 0.15);
+  color: #2E8B57;
+}
+
+.auth-badge-icon.trophy {
+  background-color: rgba(255, 215, 0, 0.2);
+  color: #d4a300;
+}
+
+.auth-badge-icon.target {
+  background-color: rgba(230, 126, 34, 0.15);
+  color: #e67e22;
+}
+
+.auth-badge-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-badge-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+.auth-badge-text span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes floatDelayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(10px); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 4.5s ease-in-out infinite 0.5s;
+}
+
+@media (max-width: 1080px) {
+  .auth-floating-badge {
+    display: none;
+  }
 }
 
 .auth-header {
@@ -443,15 +563,18 @@
   background-color: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 24px 16px;
+  padding: 24px 16px 20px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 8px;
   position: relative;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .podium-card:hover {
@@ -461,8 +584,9 @@
 
 .podium-avatar-wrapper {
   position: relative;
-  width: 70px;
-  height: 70px;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
 }
 
 .podium-avatar {
@@ -474,7 +598,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: var(--text-muted);
 }
 
@@ -495,20 +619,26 @@
 }
 
 .podium-username {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-color);
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.4;
+  margin: 4px 0;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .podium-score {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   color: var(--secondary);
+  line-height: 1.2;
 }
 
 .podium-meta {
@@ -520,7 +650,7 @@
 /* Highlight Ranking Styles */
 .podium-card.first {
   order: 2;
-  height: 250px;
+  min-height: 265px;
   border-color: var(--highlight);
   background: linear-gradient(185deg, #FFFDEB 0%, var(--card-bg) 100%);
 }
@@ -541,7 +671,7 @@
 
 .podium-card.second {
   order: 1;
-  height: 210px;
+  min-height: 245px;
   border-color: #a4b0be;
   background: linear-gradient(185deg, #f1f2f6 0%, var(--card-bg) 100%);
 }
@@ -556,7 +686,7 @@
 
 .podium-card.third {
   order: 3;
-  height: 190px;
+  min-height: 235px;
   border-color: var(--accent);
   background: linear-gradient(185deg, #FFF5EB 0%, var(--card-bg) 100%);
 }
@@ -655,6 +785,16 @@
   font-size: 3rem;
   color: var(--border-color);
   margin-bottom: 16px;
+}
+
+@media (max-width: 860px) {
+  .auth-container-grid {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+  .auth-banner-side {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {

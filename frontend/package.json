@@ -1,0 +1,13 @@
+{
+  "name": "studyquest-frontend",
+  "version": "1.0.0",
+  "description": "Frontend client for StudyQuest",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y serve -l 3000 .",
+    "start": "npx -y serve -l 3000 ."
+  },
+  "keywords": [],
+  "author": "StudyQuest",
+  "license": "ISC"
+}

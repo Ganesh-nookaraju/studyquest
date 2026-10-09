@@ -1,4 +1,11 @@
 // backend/utils/seedQuestions.js
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('⚠️ Unable to set custom DNS servers:', dnsErr.message);
+}
+
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
@@ -17,8 +24,11 @@ const seedQuestions = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB Atlas successfully for question seeding...');
 
-    // Resolve path to the existing frontend data/questions.json
-    const filePath = path.join(__dirname, '../../data/questions.json');
+    // Resolve path to the frontend data/questions.json
+    let filePath = path.join(__dirname, '../../frontend/data/questions.json');
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, '../../data/questions.json');
+    }
     if (!fs.existsSync(filePath)) {
       throw new Error(`questions.json file not found at path: ${filePath}`);
     }

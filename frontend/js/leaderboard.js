@@ -56,7 +56,10 @@ function renderLeaderboard() {
       card.className = `podium-card ${cfg.class} animate-fade`;
 
       if (entry) {
-        const courseName = subjectTitleMap[entry.course] || entry.course.toUpperCase();
+        const courseName = subjectTitleMap[entry.course] || (entry.course ? entry.course.toUpperCase() : 'HTML5');
+        const rawName = (entry.username && String(entry.username).trim()) ? String(entry.username).trim() : 'Anonymous';
+        const safeName = escapeHtml(rawName);
+        
         card.innerHTML = `
           <div class="podium-avatar-wrapper">
             <div class="podium-avatar">
@@ -64,9 +67,9 @@ function renderLeaderboard() {
             </div>
             <div class="podium-rank-badge">${cfg.rank}</div>
           </div>
-          <h4 class="podium-username">${escapeHtml(entry.username)}</h4>
+          <h4 class="podium-username" title="${safeName}">${safeName}</h4>
           <div class="podium-score">${entry.score} / 5</div>
-          <div class="podium-meta">${courseName} (${entry.difficulty})</div>
+          <div class="podium-meta">${courseName} (${entry.difficulty || 'easy'})</div>
         `;
       } else {
         // TBD placeholder slot
@@ -92,26 +95,28 @@ function renderLeaderboard() {
 
     leaderboard.forEach((entry, idx) => {
       const row = document.createElement('tr');
-      const courseName = subjectTitleMap[entry.course] || entry.course.toUpperCase();
-      const initial = (entry.username || '').charAt(0).toUpperCase();
+      const courseName = subjectTitleMap[entry.course] || (entry.course ? entry.course.toUpperCase() : 'HTML5');
+      const rawName = (entry.username && String(entry.username).trim()) ? String(entry.username).trim() : 'Anonymous';
+      const initial = rawName.charAt(0).toUpperCase();
+      const safeName = escapeHtml(rawName);
 
       row.innerHTML = `
         <td class="ranking-row-num">#${idx + 1}</td>
         <td>
           <div class="ranking-username">
             <div class="ranking-avatar">${escapeHtml(initial)}</div>
-            <span>${escapeHtml(entry.username)}</span>
+            <span title="${safeName}">${safeName}</span>
           </div>
         </td>
         <td>${courseName}</td>
         <td>
-          <span class="quiz-diff-badge ${entry.difficulty}" style="font-size: 0.7rem; padding: 2px 8px;">
-            ${entry.difficulty}
+          <span class="quiz-diff-badge ${entry.difficulty || 'easy'}" style="font-size: 0.7rem; padding: 2px 8px;">
+            ${entry.difficulty || 'easy'}
           </span>
         </td>
         <td class="ranking-row-score">${entry.score} / 5</td>
         <td style="color: var(--text-muted); font-size: 0.85rem;">
-          ${new Date(entry.date).toLocaleDateString(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}
+          ${new Date(entry.date || Date.now()).toLocaleDateString(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}
         </td>
       `;
 

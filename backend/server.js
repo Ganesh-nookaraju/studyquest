@@ -1,3 +1,10 @@
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('⚠️ Unable to set custom DNS servers:', dnsErr.message);
+}
+
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -8,9 +15,6 @@ const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const quizRoutes = require('./routes/quizRoutes');
-
-// Connect MongoDB
-connectDB();
 
 // Create Express app
 const app = express();
@@ -43,19 +47,27 @@ app.get('/', (req, res) => {
   });
 });
 
-// Start server
+// Start server after connecting to MongoDB
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log("================================");
-  console.log("SERVER STARTED");
-  console.log("PORT:", PORT);
-  console.log("================================");
-});
+let server;
 
-server.on("error", (err) => {
-  console.error("SERVER ERROR:", err);
-});
+const startServer = async () => {
+  await connectDB();
+  
+  server = app.listen(PORT, () => {
+    console.log("================================");
+    console.log("SERVER STARTED");
+    console.log("PORT:", PORT);
+    console.log("================================");
+  });
+
+  server.on("error", (err) => {
+    console.error("SERVER ERROR:", err);
+  });
+};
+
+startServer();
 
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION:", err);

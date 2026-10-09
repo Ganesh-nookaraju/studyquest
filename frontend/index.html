@@ -75,16 +75,47 @@
       color: var(--accent);
       font-size: 1.2rem;
     }
-    @keyframes floatIllustration {
-      0% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(1deg); }
-      100% { transform: translateY(0px) rotate(0deg); }
+    @keyframes floatTechCircle {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-16px);
+      }
     }
-    .hero-illustration svg {
+    .hero-tech-container {
+      position: relative;
       width: 100%;
-      max-height: 400px;
-      animation: floatIllustration 6s ease-in-out infinite;
-      filter: drop-shadow(0 20px 30px rgba(42, 157, 143, 0.08));
+      max-width: 500px;
+      height: 480px;
+      margin: 0 auto;
+      overflow: visible;
+      mix-blend-mode: multiply;
+    }
+    .hero-hand-base {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: url('images/hero-tech-full.jpg') no-repeat center bottom / contain;
+      clip-path: inset(52% 0 0 0);
+      z-index: 1;
+    }
+    .hero-tech-circle {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: url('images/hero-tech-full.jpg') no-repeat center top / contain;
+      clip-path: circle(31% at 50% 31%);
+      z-index: 2;
+      animation: floatTechCircle 3.5s ease-in-out infinite;
+      will-change: transform;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-tech-circle {
+        animation: none;
+      }
     }
     .home-courses-section {
       padding: 80px 0;
@@ -179,118 +210,10 @@
         </div>
 
         <div class="hero-illustration animate-fade">
-          <!-- Premium Isometric Learning Quest & Coding SVG -->
-          <svg viewBox="0 0 500 420" width="100%" height="100%">
-            <!-- Sky/Atmosphere gradients -->
-            <defs>
-              <linearGradient id="glowGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#2A9D8F" stop-opacity="0.15"/>
-                <stop offset="100%" stop-color="#2E8B57" stop-opacity="0.02"/>
-              </linearGradient>
-              <linearGradient id="trophyGlow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#FFD700"/>
-                <stop offset="100%" stop-color="#F4A261"/>
-              </linearGradient>
-              <linearGradient id="laptopScreen" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#2B2D42"/>
-                <stop offset="100%" stop-color="#1A1C24"/>
-              </linearGradient>
-            </defs>
-
-            <!-- Background glowing circle -->
-            <circle cx="250" cy="210" r="180" fill="url(#glowGrad)"/>
-            
-            <!-- Isometric Grid Lines (Subtle) -->
-            <path d="M 50 250 L 250 150 L 450 250 L 250 350 Z" fill="none" stroke="#2A9D8F" stroke-width="1" opacity="0.15"/>
-            <path d="M 50 250 L 250 350" fill="none" stroke="#2A9D8F" stroke-width="1" opacity="0.1"/>
-            <path d="M 450 250 L 250 350" fill="none" stroke="#2A9D8F" stroke-width="1" opacity="0.1"/>
-
-            <!-- Floating Laptop Deck (Isometric Projection) -->
-            <!-- Laptop Base Shadow -->
-            <ellipse cx="250" cy="305" rx="140" ry="25" fill="#1E2022" opacity="0.2"/>
-            
-            <!-- Laptop Keyboard Base -->
-            <path d="M 120 280 L 250 330 L 380 280 L 250 250 Z" fill="#EAF7F8" stroke="#D1E5E7" stroke-width="3"/>
-            <path d="M 120 280 L 120 288 L 250 338 L 250 330 Z" fill="#B3D7D9"/>
-            <path d="M 250 330 L 250 338 L 380 288 L 380 280 Z" fill="#B3D7D9"/>
-            
-            <!-- Laptop Keyboard Key lines (Isometric details) -->
-            <path d="M 150 275 L 250 313 L 350 275 L 250 252 Z" fill="#C5ECEF" opacity="0.6"/>
-            <!-- Trackpad -->
-            <path d="M 225 315 L 250 325 L 275 315 L 250 307 Z" fill="#D5F1F3"/>
-
-            <!-- Floating Screen (Rises up, angled facing front-left) -->
-            <!-- Screen back cover -->
-            <path d="M 130 150 C 130 145, 135 140, 140 140 L 360 140 C 365 140, 370 145, 370 150 L 370 255 L 130 255 Z" fill="#EAF7F8" stroke="#D1E5E7" stroke-width="2"/>
-            <!-- Screen glass display -->
-            <path d="M 138 150 L 362 150 L 362 248 L 138 248 Z" fill="url(#laptopScreen)" stroke="#2B2D42" stroke-width="1"/>
-            
-            <!-- Code text editor lines on screen -->
-            <rect x="150" y="160" width="80" height="6" rx="3" fill="#2A9D8F" opacity="0.8"/>
-            <rect x="150" y="172" width="140" height="6" rx="3" fill="#FFFFFF" opacity="0.5"/>
-            <rect x="165" y="184" width="100" height="6" rx="3" fill="#4CC9F0" opacity="0.8"/>
-            <rect x="180" y="196" width="120" height="6" rx="3" fill="#FF6B6B" opacity="0.8"/>
-            <rect x="165" y="208" width="90" height="6" rx="3" fill="#2E8B57" opacity="0.8"/>
-            <rect x="150" y="220" width="60" height="6" rx="3" fill="#2A9D8F" opacity="0.8"/>
-
-            <!-- Winding Path of Quests (Glow connector path) -->
-            <path d="M 100 240 Q 120 100, 250 110 T 400 130" fill="none" stroke="#2A9D8F" stroke-width="4" stroke-dasharray="8 6" opacity="0.8"/>
-
-            <!-- Learning Node Badges floating around -->
-            <!-- HTML Badge (Left) -->
-            <g transform="translate(90, 200)">
-              <circle cx="0" cy="0" r="28" fill="#FFFFFF" stroke="#2E8B57" stroke-width="3" filter="drop-shadow(0px 8px 16px rgba(0,0,0,0.1))"/>
-              <text x="0" y="5" font-family="'Outfit', sans-serif" font-weight="bold" font-size="14" text-anchor="middle" fill="#E34F26">&lt;/&gt;</text>
-              <!-- Small Green Complete Check badge -->
-              <circle cx="18" cy="-18" r="8" fill="#2E8B57"/>
-              <path d="M 15 -18 L 17 -16 L 21 -20" fill="none" stroke="#FFFFFF" stroke-width="2"/>
-            </g>
-
-            <!-- CSS Badge (Middle-Left) -->
-            <g transform="translate(160, 90)">
-              <circle cx="0" cy="0" r="24" fill="#FFFFFF" stroke="#4CC9F0" stroke-width="2.5"/>
-              <text x="0" y="5" font-family="'Outfit', sans-serif" font-weight="bold" font-size="12" text-anchor="middle" fill="#1572B6">{ }</text>
-              <circle cx="15" cy="-15" r="7" fill="#4CC9F0"/>
-              <path d="M 12 -15 L 14 -13 L 18 -17" fill="none" stroke="#FFFFFF" stroke-width="2"/>
-            </g>
-
-            <!-- JS Badge (Middle-Right) -->
-            <g transform="translate(320, 75)">
-              <circle cx="0" cy="0" r="26" fill="#FFFFFF" stroke="#F4A261" stroke-width="2.5"/>
-              <text x="0" y="5" font-family="'Outfit', sans-serif" font-weight="bold" font-size="12" text-anchor="middle" fill="#F7DF1E">JS</text>
-              <!-- Pending/Active mark -->
-              <circle cx="16" cy="-16" r="7" fill="#F4A261"/>
-              <path d="M 16 -19 L 16 -13 M 13 -16 L 19 -16" stroke="#FFFFFF" stroke-width="2"/>
-            </g>
-
-            <!-- Python Badge (Right) -->
-            <g transform="translate(410, 160)">
-              <circle cx="0" cy="0" r="28" fill="#FFFFFF" stroke="#DFD3C3" stroke-width="2" opacity="0.8"/>
-              <text x="0" y="5" font-family="'Outfit', sans-serif" font-weight="bold" font-size="12" text-anchor="middle" fill="#3776AB" opacity="0.6">PY</text>
-              <!-- Locked status padlock -->
-              <g transform="translate(18, -18)" opacity="0.8">
-                <circle cx="0" cy="0" r="8" fill="#A5A5A5"/>
-                <rect x="-3" y="-2" width="6" height="5" rx="1" fill="#FFFFFF"/>
-                <path d="M -2 -1 L -2 -3 C -2 -4, 2 -4, 2 -1" fill="none" stroke="#FFFFFF" stroke-width="1"/>
-              </g>
-            </g>
-
-            <!-- Achievement / Golden Trophy at peak (Top Center-Right) -->
-            <g transform="translate(250, 70)">
-              <circle cx="0" cy="-25" r="32" fill="url(#trophyGlow)"/>
-              
-              <!-- Trophy SVG Icon -->
-              <path d="M -12 -38 L 12 -38 L 12 -28 C 12 -16, -12 -16, -12 -28 Z" fill="#FFFFFF"/>
-              <path d="M -3 -18 L 3 -18 L 3 -12 L -3 -12 Z" fill="#FFFFFF"/>
-              <path d="M -8 -12 L 8 -12 L 8 -9 L -8 -9 Z" fill="#FFFFFF"/>
-              <path d="M -17 -34 C -21 -34, -21 -26, -12 -26 M 17 -34 C 21 -34, 21 -26, 12 -26" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
-              
-              <!-- Sparkle Star lines -->
-              <path d="M -36 -45 L -32 -41 M -32 -45 L -36 -41" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
-              <path d="M 32 -45 L 36 -41 M 36 -45 L 32 -41" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
-              <path d="M 0 -62 L 0 -58 M -2 -60 L 2 -60" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
-            </g>
-          </svg>
+          <div class="hero-tech-container" role="img" aria-label="Technology circle with laptop, trophy and coding icons floating above a stationary 3D hand">
+            <div class="hero-hand-base" aria-hidden="true"></div>
+            <div class="hero-tech-circle" aria-hidden="true"></div>
+          </div>
         </div>
       </div>
     </section>

@@ -276,7 +276,12 @@ function submitQuiz() {
             if (difficulty === 'hard') xpGained = 200;
             userProgress.stats.xp = (userProgress.stats.xp || 0) + xpGained;
 
-            // Update level status
+            // Update level status safely
+            if (!userProgress[group]) userProgress[group] = {};
+            if (!userProgress[group][subject]) {
+              userProgress[group][subject] = { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 };
+            }
+
             userProgress[group][subject][difficulty] = 'passed';
 
             // Unlock next difficulties

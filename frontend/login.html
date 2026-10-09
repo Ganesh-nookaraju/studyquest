@@ -42,38 +42,80 @@
 
   <!-- Main Content -->
   <main class="auth-wrapper">
+    <!-- 4 Outer Floating Feature Badges in Background Space -->
+    <div class="auth-floating-badge top-left animate-float-slow">
+      <div class="auth-badge-icon book">
+        <i class="fas fa-book-open"></i>
+      </div>
+      <div class="auth-badge-text">
+        <strong>Interactive Books</strong>
+        <span>Course Guides & Tracks</span>
+      </div>
+    </div>
+
+    <div class="auth-floating-badge bottom-left animate-float-delayed">
+      <div class="auth-badge-icon code">
+        <i class="fas fa-laptop-code"></i>
+      </div>
+      <div class="auth-badge-text">
+        <strong>Hands-On Quizzes</strong>
+        <span>HTML, CSS, JS & Python</span>
+      </div>
+    </div>
+
+    <div class="auth-floating-badge top-right animate-float-slow">
+      <div class="auth-badge-icon trophy">
+        <i class="fas fa-trophy"></i>
+      </div>
+      <div class="auth-badge-text">
+        <strong>Global Standings</strong>
+        <span>Rank Podiums & Medals</span>
+      </div>
+    </div>
+
+    <div class="auth-floating-badge bottom-right animate-float-delayed">
+      <div class="auth-badge-icon target">
+        <i class="fas fa-bullseye"></i>
+      </div>
+      <div class="auth-badge-text">
+        <strong>Earn Experience</strong>
+        <span>XP Stats & Badges</span>
+      </div>
+    </div>
+
+    <!-- Centered Auth Card -->
     <div class="auth-card animate-fade">
       <div class="auth-header">
         <h2>Welcome Back</h2>
-        <p>Login to resume your StudyQuest achievements and practice programming</p>
+        <p>Login to resume your StudyQuest achievements</p>
       </div>
 
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="login-identity">Username or Email</label>
-          <div class="form-control-wrapper">
-            <i class="fas fa-user"></i>
-            <input type="text" id="login-identity" class="form-control" placeholder="Enter username or email" required>
-            <div class="error-message">Username or Email is required.</div>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-identity">Username or Email</label>
+            <div class="form-control-wrapper">
+              <i class="fas fa-user"></i>
+              <input type="text" id="login-identity" class="form-control" placeholder="Enter username or email" required>
+              <div class="error-message">Username or Email is required.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <div class="form-control-wrapper">
-            <i class="fas fa-lock"></i>
-            <input type="password" id="login-password" class="form-control" placeholder="Enter password" required>
-            <div class="error-message">Password is required.</div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="form-control-wrapper">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="login-password" class="form-control" placeholder="Enter password" required>
+              <div class="error-message">Password is required.</div>
+            </div>
           </div>
-        </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-          <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-      </form>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </form>
 
-      <div class="auth-footer">
-        <p>Don't have an account? <a href="register.html">Register here</a></p>
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="register.html">Register here</a></p>
       </div>
     </div>
   </main>
