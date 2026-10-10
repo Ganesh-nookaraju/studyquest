@@ -42,8 +42,14 @@ const getUserProgress = async (userId) => {
     dbms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
     json: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
     reactjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    nodejs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    expressjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    mongodb: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
     datastructures: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
-    algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
+    algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    os: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    networks: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+    git: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
   };
 
   scores.forEach(s => {

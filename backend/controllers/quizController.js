@@ -4,36 +4,72 @@ const Score = require('../models/Score');
 const Course = require('../models/Course');
 const Category = require('../models/Category');
 
+// Course and Category key alias mapping to ensure network/client requests never fail on variations
+const subjectAliasMap = {
+  js: 'javascript',
+  'javascript': 'javascript',
+  py: 'python',
+  python: 'python',
+  css: 'css',
+  html: 'html',
+  c: 'c',
+  cpp: 'cpp',
+  'c++': 'cpp',
+  java: 'java',
+  sql: 'sql',
+  dbms: 'dbms',
+  json: 'json',
+  react: 'reactjs',
+  reactjs: 'reactjs',
+  'react.js': 'reactjs',
+  node: 'nodejs',
+  nodejs: 'nodejs',
+  'node.js': 'nodejs',
+  express: 'expressjs',
+  expressjs: 'expressjs',
+  'express.js': 'expressjs',
+  mongo: 'mongodb',
+  mongodb: 'mongodb',
+  ds: 'datastructures',
+  dsa: 'datastructures',
+  datastructures: 'datastructures',
+  algo: 'algorithms',
+  algorithms: 'algorithms',
+  os: 'os',
+  network: 'networks',
+  networks: 'networks',
+  git: 'git'
+};
+
+const normalizeCourseKey = (key) => {
+  if (!key) return '';
+  const clean = key.toLowerCase().trim();
+  return subjectAliasMap[clean] || clean;
+};
+
 /**
- * @desc    Get 10 randomized questions for a specific course
+ * @desc    Get randomized quiz questions for a specific course or category
  * @route   GET /api/quiz/:courseKey
- * @access  Private
+ * @access  Public / Optional Auth
  */
 const getQuizQuestions = async (req, res) => {
   try {
-    const courseKey = req.params.courseKey.toLowerCase().trim();
+    const rawKey = req.params.courseKey;
+    const courseKey = normalizeCourseKey(rawKey);
 
-    // 1. Verify if the course or category exists and is active
+    // 1. Verify if the course or category exists or has questions
     let subjectExists = await Course.findOne({ courseKey, status: 'active' });
     if (!subjectExists) {
       subjectExists = await Category.findOne({ categoryKey: courseKey });
     }
 
-    if (!subjectExists) {
-      return res.status(404).json({
-        success: false,
-        message: `Subject '${courseKey}' not found or is inactive.`
-      });
-    }
-
     // 2. Fetch up to 10 randomized questions using MongoDB aggregation
-    // Allow optional filtering by difficulty query parameter
     const matchStage = { course: courseKey };
     if (req.query.difficulty) {
       matchStage.difficulty = req.query.difficulty.toLowerCase().trim();
     }
 
-    const questions = await Question.aggregate([
+    let questions = await Question.aggregate([
       { $match: matchStage },
       { $sample: { size: 10 } },
       {
@@ -45,15 +81,31 @@ const getQuizQuestions = async (req, res) => {
       }
     ]);
 
+    // If requested difficulty yielded 0, attempt fallback across any difficulty for the subject
+    if (questions.length === 0) {
+      questions = await Question.aggregate([
+        { $match: { course: courseKey } },
+        { $sample: { size: 10 } },
+        {
+          $project: {
+            correctAnswer: 0,
+            createdAt: 0,
+            __v: 0
+          }
+        }
+      ]);
+    }
+
     if (questions.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No questions found for the course: ${courseKey}`
+        message: `No questions found for the course or category: ${courseKey}`
       });
     }
 
     return res.status(200).json({
       success: true,
+      course: courseKey,
       count: questions.length,
       questions
     });
@@ -67,13 +119,13 @@ const getQuizQuestions = async (req, res) => {
 };
 
 /**
- * @desc    Submit answers, grade quiz, save results
+ * @desc    Submit answers, grade quiz, and save results in MongoDB
  * @route   POST /api/quiz/submit
- * @access  Private
+ * @access  Public / Optional Auth (records for authenticated user or guest)
  */
 const submitQuiz = async (req, res) => {
   try {
-    const { course, difficulty, answers } = req.body;
+    const { course, difficulty, answers, username } = req.body;
 
     // 1. Input Presence Validation
     if (!course || !difficulty || !answers) {
@@ -83,7 +135,6 @@ const submitQuiz = async (req, res) => {
       });
     }
 
-    // 2. Validate format of answers
     if (!Array.isArray(answers)) {
       return res.status(400).json({
         success: false,
@@ -91,10 +142,9 @@ const submitQuiz = async (req, res) => {
       });
     }
 
-    const trimmedCourse = course.toLowerCase().trim();
+    const trimmedCourse = normalizeCourseKey(course);
     const trimmedDifficulty = difficulty.toLowerCase().trim();
 
-    // Validate difficulty input
     if (!['easy', 'medium', 'hard'].includes(trimmedDifficulty)) {
       return res.status(400).json({
         success: false,
@@ -102,15 +152,14 @@ const submitQuiz = async (req, res) => {
       });
     }
 
-    // 3. Validate quiz size
-    if (answers.length !== 5) {
+    if (answers.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'A quiz submission must contain exactly 5 answers.'
+        message: 'Submission must contain answers.'
       });
     }
 
-    // Deduplicate answers by questionId
+    // Deduplicate answers by question identifier
     const uniqueAnswers = [];
     const seenIds = new Set();
     for (const ans of answers) {
@@ -122,35 +171,23 @@ const submitQuiz = async (req, res) => {
       }
     }
 
-    if (uniqueAnswers.length !== 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'Duplicate or invalid question submissions are not allowed.'
-      });
+    const questionIds = uniqueAnswers.map(a => a.questionId.toString());
+    const validMongoIds = questionIds.filter(id => id.match(/^[0-9a-fA-F]{24}$/));
+
+    let dbQuestions = [];
+    if (validMongoIds.length > 0) {
+      dbQuestions = await Question.find({ _id: { $in: validMongoIds } });
     }
 
-    const questionIds = uniqueAnswers.map(a => a.questionId);
-    
-    // Ensure all questionIds are valid MongoDB ObjectIds before query
-    const validIds = questionIds.filter(id => id && id.toString().match(/^[0-9a-fA-F]{24}$/));
-    if (validIds.length !== questionIds.length) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid questionId format in submission'
-      });
+    // If some or all question IDs were non-ObjectId (e.g. from local dataset fallback like "html_e1"),
+    // fetch questions by course to grade by index or matching question content
+    if (dbQuestions.length === 0) {
+      dbQuestions = await Question.find({ course: trimmedCourse, difficulty: trimmedDifficulty });
+      if (dbQuestions.length === 0) {
+        dbQuestions = await Question.find({ course: trimmedCourse });
+      }
     }
 
-    const dbQuestions = await Question.find({ _id: { $in: validIds }, course: trimmedCourse });
-
-    // Validate that all submitted question IDs exist and belong to the correct course
-    if (dbQuestions.length !== uniqueAnswers.length) {
-      return res.status(400).json({
-        success: false,
-        message: 'Some submitted questions are invalid or do not belong to the selected course.'
-      });
-    }
-
-    // Map database questions by string ID for quick lookup
     const dbQuestionsMap = new Map();
     dbQuestions.forEach(q => {
       dbQuestionsMap.set(q._id.toString(), q);
@@ -162,11 +199,16 @@ const submitQuiz = async (req, res) => {
     let maxPossibleScore = 0;
     const gradedDetails = [];
 
-    // 4. Grade each answer
-    uniqueAnswers.forEach(ans => {
-      const q = dbQuestionsMap.get(ans.questionId.toString());
+    // Grade each submitted answer
+    uniqueAnswers.forEach((ans, idx) => {
+      let q = dbQuestionsMap.get(ans.questionId.toString());
+      // Fallback matching by positional order if question was from local ID set
+      if (!q && dbQuestions[idx]) {
+        q = dbQuestions[idx];
+      }
+
       if (q) {
-        const isCorrect = ans.selectedOption === q.correctAnswer;
+        const isCorrect = (ans.selectedOption !== null && ans.selectedOption !== undefined) && (ans.selectedOption === q.correctAnswer);
         const marks = q.marks || 10;
         maxPossibleScore += marks;
 
@@ -184,24 +226,27 @@ const submitQuiz = async (req, res) => {
           correctAnswer: q.correctAnswer,
           isCorrect
         });
+      } else {
+        // Unknown question fallback
+        wrongAnswers++;
+        maxPossibleScore += 10;
       }
     });
 
-    // If no submitted questions match existing ones in the DB
-    if (dbQuestions.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No valid questions found for submission'
-      });
-    }
+    // Ensure maxPossibleScore is at least 10 to avoid division by zero
+    if (maxPossibleScore === 0) maxPossibleScore = uniqueAnswers.length * 10;
 
-    // Compute percentage (rounded to nearest integer)
-    const percentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
+    const percentage = Math.round((correctAnswers / uniqueAnswers.length) * 100);
+    const passed = percentage >= 60;
+
+    // Determine user details (authenticated user or guest)
+    const effectiveUserId = req.user ? req.user._id : null;
+    const effectiveUsername = req.user ? req.user.username : (username ? String(username).trim() : 'Guest Student');
 
     // 5. Store score details in database
     const quizScore = await Score.create({
-      userId: req.user._id,
-      username: req.user.username,
+      userId: effectiveUserId,
+      username: effectiveUsername,
       course: trimmedCourse,
       difficulty: trimmedDifficulty,
       score: totalScore,
@@ -210,7 +255,6 @@ const submitQuiz = async (req, res) => {
       wrongAnswers
     });
 
-    // 6. Return response to user
     return res.status(201).json({
       success: true,
       message: 'Quiz submitted and graded successfully',
@@ -218,12 +262,14 @@ const submitQuiz = async (req, res) => {
         scoreId: quizScore._id,
         course: trimmedCourse,
         difficulty: trimmedDifficulty,
-        score: totalScore,
+        score: correctAnswers, // score count out of total questions
+        pointsEarned: totalScore,
+        totalQuestions: uniqueAnswers.length,
         maxPossibleScore,
         percentage,
         correctAnswers,
         wrongAnswers,
-        passed: percentage >= 60,
+        passed,
         gradedDetails
       }
     });
@@ -239,5 +285,6 @@ const submitQuiz = async (req, res) => {
 
 module.exports = {
   getQuizQuestions,
-  submitQuiz
+  submitQuiz,
+  subjectAliasMap
 };

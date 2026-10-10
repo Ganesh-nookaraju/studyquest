@@ -51,4 +51,32 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+/**
+ * Optional authentication middleware:
+ * Attaches user context if valid JWT is provided, but does not block guest sessions.
+ */
+const optionalProtect = async (req, res, next) => {
+  let token;
+  req.user = null;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      if (token && token !== 'null' && token !== 'undefined') {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id).select('-password');
+      }
+    } catch (error) {
+      console.warn(`Optional token verification error: ${error.message}`);
+      req.user = null;
+    }
+  }
+
+  return next();
+};
+
+module.exports = { protect, optionalProtect };
+

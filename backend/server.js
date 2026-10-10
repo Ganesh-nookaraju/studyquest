@@ -55,10 +55,11 @@ let server;
 const startServer = async () => {
   await connectDB();
   
-  server = app.listen(PORT, () => {
+  server = app.listen(PORT, '0.0.0.0', () => {
     console.log("================================");
-    console.log("SERVER STARTED");
-    console.log("PORT:", PORT);
+    console.log("STUDYQUEST SERVER STARTED");
+    console.log(`LOCAL:   http://localhost:${PORT}`);
+    console.log(`NETWORK: http://0.0.0.0:${PORT}`);
     console.log("================================");
   });
 

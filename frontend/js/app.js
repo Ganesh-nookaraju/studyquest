@@ -240,7 +240,8 @@ function syncUserProgress() {
   const currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
   if (!currentUser) return;
 
-  fetch('http://localhost:5000/api/auth/profile', {
+  const apiBase = window.API_BASE_URL || 'http://localhost:5000';
+  fetch(`${apiBase}/api/auth/profile`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

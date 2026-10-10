@@ -5,6 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "npx -y serve -l 3000 .",
+    "live-server": "npx -y live-server --port=5500 --host=0.0.0.0 .",
     "start": "npx -y serve -l 3000 ."
   },
   "keywords": [],

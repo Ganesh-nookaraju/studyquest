@@ -1,7 +1,10 @@
 // Dashboard progression controller
 document.addEventListener('DOMContentLoaded', () => {
-  const currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
-  if (!currentUser) return;
+  let currentUser = JSON.parse(localStorage.getItem('studyquest_user'));
+  if (!currentUser) {
+    currentUser = { username: 'Student', token: null };
+    localStorage.setItem('studyquest_user', JSON.stringify(currentUser));
+  }
 
   const progressKey = `studyquest_progress_${currentUser.username}`;
   let userProgress = JSON.parse(localStorage.getItem(progressKey));
@@ -104,8 +107,14 @@ function renderCourseGrid(subjects, gridId, type) {
     dbms: { title: 'Database Systems', desc: 'Analyze data integrity, 3NF normalization, transactions, and locks.', icon: 'fas fa-server' },
     json: { title: 'JSON Data Format', desc: 'Format variables, parse text strings, structure nesting, and validate rules.', icon: 'fas fa-brackets-curly' },
     reactjs: { title: 'React JS Framework', desc: 'Understand virtual DOM diffs, state hooks, props, context APIs, and JSX.', icon: 'fab fa-react' },
+    nodejs: { title: 'Node.js Runtime', desc: 'Master asynchronous events, fs, streams, process, and V8 runtime execution.', icon: 'fab fa-node-js' },
+    expressjs: { title: 'Express.js Web Server', desc: 'Build scalable APIs, middleware chains, REST routing, and error handlers.', icon: 'fas fa-server' },
+    mongodb: { title: 'MongoDB & Mongoose', desc: 'Store BSON documents, aggregation pipelines, indexes, and collections.', icon: 'fas fa-leaf' },
     datastructures: { title: 'Data Structures', desc: 'Implement stacks, LIFO arrays, binary search trees, and custom queues.', icon: 'fas fa-project-diagram' },
-    algorithms: { title: 'Algorithms', desc: 'Study recursion, sorting complexity, Dijkstra pathfinding, and greedy algorithms.', icon: 'fas fa-calculator' }
+    algorithms: { title: 'Algorithms', desc: 'Study recursion, sorting complexity, Dijkstra pathfinding, and greedy algorithms.', icon: 'fas fa-calculator' },
+    os: { title: 'Operating Systems', desc: 'Understand CPU scheduling, deadlocks, paging, virtual memory, and threads.', icon: 'fas fa-microchip' },
+    networks: { title: 'Computer Networks', desc: 'Master OSI layers, TCP 3-way handshake, IP routing, HTTP/2, and DNS.', icon: 'fas fa-network-wired' },
+    git: { title: 'Git Version Control', desc: 'Master commits, branching, merging, rebasing, remotes, and reflog.', icon: 'fab fa-git-alt' }
   };
 
   Object.keys(subjects).forEach(key => {
@@ -209,12 +218,12 @@ function initCategoryFilter() {
           const core = ['c', 'cpp', 'java'];
           card.style.display = core.includes(card.dataset.category) ? 'flex' : 'none';
         } else if (filter === 'web') {
-          // web: json, reactjs, sql, dbms
-          const web = ['json', 'reactjs', 'sql', 'dbms'];
+          // web: json, reactjs, nodejs, expressjs, mongodb, sql, dbms
+          const web = ['json', 'reactjs', 'nodejs', 'expressjs', 'mongodb', 'sql', 'dbms'];
           card.style.display = web.includes(card.dataset.category) ? 'flex' : 'none';
         } else if (filter === 'theory') {
-          // theory: datastructures, algorithms
-          const theory = ['datastructures', 'algorithms'];
+          // theory: datastructures, algorithms, os, networks, git
+          const theory = ['datastructures', 'algorithms', 'os', 'networks', 'git'];
           card.style.display = theory.includes(card.dataset.category) ? 'flex' : 'none';
         }
       });
@@ -243,8 +252,14 @@ function resetUserProgress(username) {
       dbms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       json: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       reactjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      nodejs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      expressjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      mongodb: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       datastructures: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
-      algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
+      algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      os: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      networks: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      git: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
     },
     stats: {
       xp: 0,
@@ -360,8 +375,8 @@ function initProfileModal(currentUser, userProgress) {
     };
 
     if (usernameChanged) {
-      // Call backend PUT /api/auth/profile
-      fetch('http://localhost:5000/api/auth/profile', {
+      const apiBase = window.API_BASE_URL || 'http://localhost:5000';
+      fetch(`${apiBase}/api/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

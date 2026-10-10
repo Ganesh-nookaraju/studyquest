@@ -6,6 +6,8 @@
     "dev": "npm run dev --prefix backend",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
+    "live-server": "npx -y live-server --port=5500 --host=0.0.0.0 frontend",
+    "test:exams": "node backend/test_all_exams.js",
     "start": "npm run start --prefix backend"
   },
   "keywords": [],

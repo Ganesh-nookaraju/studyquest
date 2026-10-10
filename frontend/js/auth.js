@@ -79,8 +79,8 @@ function initRegisterForm() {
       return;
     }
 
-    // Create user on backend
-    fetch('http://localhost:5000/api/auth/register', {
+    const apiBase = window.API_BASE_URL || 'http://localhost:5000';
+    fetch(`${apiBase}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -153,7 +153,8 @@ function initLoginForm() {
     const password = passwordInput.value;
 
 
-    fetch('http://localhost:5000/api/auth/login', {
+    const apiBase = window.API_BASE_URL || 'http://localhost:5000';
+    fetch(`${apiBase}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -221,8 +222,14 @@ function initUserProgress(username) {
       dbms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       json: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       reactjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      nodejs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      expressjs: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      mongodb: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
       datastructures: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
-      algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
+      algorithms: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      os: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      networks: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 },
+      git: { easy: 'unlocked', medium: 'locked', hard: 'locked', percent: 0 }
     },
     stats: {
       xp: 0,

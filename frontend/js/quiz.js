@@ -27,11 +27,23 @@ const subjectAliasMap = {
   react: 'reactjs',
   reactjs: 'reactjs',
   'react.js': 'reactjs',
+  node: 'nodejs',
+  nodejs: 'nodejs',
+  'node.js': 'nodejs',
+  express: 'expressjs',
+  expressjs: 'expressjs',
+  'express.js': 'expressjs',
+  mongo: 'mongodb',
+  mongodb: 'mongodb',
   ds: 'datastructures',
   dsa: 'datastructures',
   datastructures: 'datastructures',
   algo: 'algorithms',
-  algorithms: 'algorithms'
+  algorithms: 'algorithms',
+  os: 'os',
+  network: 'networks',
+  networks: 'networks',
+  git: 'git'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -88,34 +100,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const token = currentUser.token;
+  const apiBase = window.API_BASE_URL || 'http://localhost:5000';
 
-  // If token is present, attempt fetching from Backend API
+  // Always attempt fetching exam questions from the Backend API over network
+  const requestHeaders = { 'Content-Type': 'application/json' };
   if (token) {
-    fetch(`http://localhost:5000/api/quiz/${subject}?difficulty=${difficulty}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(response => {
-        if (!response.ok) throw new Error('Backend unavailable, switching to local question data');
-        return response.json();
-      })
-      .then(data => {
-        if (!data.success || !data.questions || data.questions.length === 0) {
-          throw new Error('No questions returned from backend API');
-        }
-        initQuiz(data.questions, false);
-      })
-      .catch(err => {
-        console.warn(`Backend API fetch for '${subject}' failed (${err.message}), attempting local questions fallback...`);
-        loadFromJSONFallback(subject, difficulty);
-      });
-  } else {
-    // Load directly from local JSON fallback if no backend token
-    loadFromJSONFallback(subject, difficulty);
+    requestHeaders['Authorization'] = `Bearer ${token}`;
   }
+
+  fetch(`${apiBase}/api/quiz/${subject}?difficulty=${difficulty}`, {
+    method: 'GET',
+    headers: requestHeaders
+  })
+    .then(response => {
+      if (!response.ok) throw new Error('Backend unavailable, switching to local question data');
+      return response.json();
+    })
+    .then(data => {
+      if (!data.success || !data.questions || data.questions.length === 0) {
+        throw new Error('No questions returned from backend API');
+      }
+      initQuiz(data.questions, false);
+    })
+    .catch(err => {
+      console.warn(`Backend API fetch for '${subject}' failed (${err.message}), attempting local questions fallback...`);
+      loadFromJSONFallback(subject, difficulty);
+    });
 });
 
 // Fallback loader from data/questions.json
@@ -198,7 +208,9 @@ function initQuiz(questionsList, fallback = false) {
   const subjectTitleMap = {
     html: 'HTML5', css: 'CSS3', javascript: 'JavaScript', python: 'Python',
     c: 'C Lang', cpp: 'C++', java: 'Java', sql: 'SQL', dbms: 'DBMS',
-    json: 'JSON', reactjs: 'React JS', datastructures: 'Data Structures', algorithms: 'Algorithms'
+    json: 'JSON', reactjs: 'React JS', nodejs: 'Node.js', expressjs: 'Express.js',
+    mongodb: 'MongoDB', datastructures: 'Data Structures', algorithms: 'Algorithms',
+    os: 'Operating Systems', networks: 'Networks', git: 'Git'
   };
 
   const titleEl = document.getElementById('quiz-subject-title');
@@ -354,35 +366,35 @@ function submitQuiz() {
     };
   });
 
-  if (!isFallbackMode && token) {
-    // Attempt backend submit
-    fetch('http://localhost:5000/api/quiz/submit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        course: subject,
-        difficulty: difficulty,
-        answers: answersPayload
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.result) {
-          processResultAndRedirect(currentUser, data.result.correctAnswers, data.result.wrongAnswers, data.result.percentage, data.result.passed);
-        } else {
-          processLocalResultAndRedirect(currentUser);
-        }
-      })
-      .catch(err => {
-        console.warn('Backend submission failed, falling back to local evaluation:', err);
-        processLocalResultAndRedirect(currentUser);
-      });
-  } else {
-    processLocalResultAndRedirect(currentUser);
+  const apiBase = window.API_BASE_URL || 'http://localhost:5000';
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+
+  // Submit and write all exam test results to the backend server/database
+  fetch(`${apiBase}/api/quiz/submit`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      course: subject,
+      difficulty: difficulty,
+      answers: answersPayload,
+      username: currentUser.username || 'Student'
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.result) {
+        processResultAndRedirect(currentUser, data.result.correctAnswers, data.result.wrongAnswers, data.result.percentage, data.result.passed);
+      } else {
+        throw new Error(data.message || 'Submission error');
+      }
+    })
+    .catch(err => {
+      console.warn('Backend submission failed, evaluating with fallback:', err);
+      processLocalResultAndRedirect(currentUser);
+    });
 }
 
 // Client-side local result processor (Fallback mode)

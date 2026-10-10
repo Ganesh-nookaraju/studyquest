@@ -9,7 +9,9 @@ function renderLeaderboard() {
   const subjectTitleMap = {
     html: 'HTML5', css: 'CSS3', javascript: 'JavaScript', python: 'Python',
     c: 'C Lang', cpp: 'C++', java: 'Java', sql: 'SQL', dbms: 'DBMS',
-    json: 'JSON', reactjs: 'React JS', datastructures: 'Data Structures', algorithms: 'Algorithms'
+    json: 'JSON', reactjs: 'React JS', nodejs: 'Node.js', expressjs: 'Express.js',
+    mongodb: 'MongoDB', datastructures: 'Data Structures', algorithms: 'Algorithms',
+    os: 'Operating Systems', networks: 'Networks', git: 'Git'
   };
 
   // Sort scores descending: score first, then date
